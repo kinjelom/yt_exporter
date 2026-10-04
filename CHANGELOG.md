@@ -12,6 +12,8 @@ change, not at release time.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-04
+
 The first release: a Prometheus exporter for JetBrains YouTrack Server (targeting 2026.2) that reads the YouTrack
 REST API and exposes application metrics. JVM metrics are left to `jmx_exporter`.
 
