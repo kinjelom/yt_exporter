@@ -1,0 +1,49 @@
+# yt_exporter configuration, all keys are optional except youtrack.url and a token.
+# Environment overrides: YOUTRACK_URL, YOUTRACK_TOKEN, YOUTRACK_TOKEN_FILE.
+
+youtrack:
+  # base URL of YouTrack, with the context path if there is one
+  url: http://127.0.0.1:8080
+  # permanent token (Profile > Account Security > Tokens), better from a file or YOUTRACK_TOKEN than inline
+  token_file: /run/secrets/youtrack-token
+  # token: perm:...
+  timeout: 10s                 # per HTTP request
+  max_concurrent_requests: 4   # requests in flight to YouTrack, across all collectors
+  # ca_file: /etc/ssl/certs/internal-ca.pem
+  # insecure_skip_verify: false
+
+collectors:
+  # read on every scrape
+  telemetry:                   # /api/admin/telemetry - needs Low-level Admin Read
+    enabled: true
+  backup:                      # database backup status and files - needs Low-level Admin Read
+    enabled: true
+  license:                     # license error - needs read access to the global settings
+    enabled: true
+
+  # refreshed in the background, scrapes return the last result
+  projects:                    # all / unresolved issues per project: 2 count requests per project
+    enabled: true
+    interval: 5m
+    include_archived: false
+    include: []                # project short names, empty = all
+    exclude: []
+  issue_types:                 # open / closed issues per project and issue type, from an index of the issues in memory
+    enabled: false
+    interval: 2m               # reads the issues updated since the previous run, usually 3 requests
+    full_resync_interval: 24h  # loads all issues of every project again
+    type_field: Type           # name of the custom field holding the issue type (a single-value field)
+    include: []                # project short names, empty = all projects that are not archived
+  users:                       # user accounts by type (YouTrack 2026.2+) and ban state
+    enabled: true
+    interval: 15m
+  queries:                     # issue counts of YouTrack search queries -> youtrack_query_issues{name, <labels>}
+    interval: 5m
+    items:
+      - name: unresolved_critical
+        query: "#Unresolved Priority: Critical, Show-stopper"
+        labels: {severity: critical}
+      - name: created_last_day
+        query: "created: {minus 1d} .. Today"
+      - name: unassigned_unresolved
+        query: "#Unresolved Assignee: Unassigned"
